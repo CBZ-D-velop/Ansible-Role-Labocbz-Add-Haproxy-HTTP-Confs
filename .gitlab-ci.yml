@@ -1,0 +1,128 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+
+stages:
+- gitlab-test
+- yaml-lint
+- jinja2-lint
+- ansible-lint
+- molecule-test
+
+variables:
+  PIPELINE_SCENARIO_NAME: "gitlabci"
+
+###############################################################################
+#################### actions
+###############################################################################
+
+# To start, we need to lint role's files with a YML vision
+# Because if one of the files doesn't respect YML conventions,
+# we dont need to test rest of the pipeline
+.yaml_lint: &yaml_lint
+  stage: yaml-lint
+  image: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DEBIAN_ANSIBLE
+  script:
+    - yamllint -c ./.yamllint $path # Here mains files
+  allow_failure: false
+  retry: 2
+
+# Then we need to lint on role's files with a JINJA2 vision
+# Because if one of the templates files doesn't respect JINJA2 conventions,
+# we dont need to test rest of the pipeline
+.jinja2_lint: &jinja2_lint
+  stage: jinja2-lint
+  image:
+    name: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DEBIAN_JINJA
+    entrypoint: ["/bin/sh", "-c"]
+  script:
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - chmod o-w .
+    - >
+      find ./templates/*.j2 \( -name '*' ! -iname ".*" \)
+      -print0 | sort --zero-terminated | xargs -0 -I{} sh -c  '/usr/bin/python /j2lint.py {}'
+  allow_failure: false
+  retry: 2
+
+.ansible_lint: &ansible_lint
+  stage: ansible-lint
+  image: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DEBIAN_ANSIBLE
+  script:
+    - ansible-lint --config=./.ansible-lint ./*
+  allow_failure: false
+  retry: 2
+
+.molecule_test: &molecule_test
+  stage: molecule-test
+  image:
+    name: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DOCKER_ANSIBLE
+  variables:
+    PY_COLORS: '1'
+    ANSIBLE_FORCE_COLOR: '1'
+  script:
+    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" http://$DOCKER_NEXUS_ADDRESS"
+    - "python3 -m compileall /usr/lib/python3 -qq"
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - "cp ./.ansible.cfg /root/.ansible.cfg"
+    - "chmod o-w ."
+    - "[ -f \"./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml\" ] && ansible-galaxy install -r ./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml --roles-path=./molecule/$PIPELINE_SCENARIO_NAME/roles"
+    - "molecule test --scenario-name $PIPELINE_SCENARIO_NAME"
+  allow_failure: false
+  retry: 2
+
+###############################################################################
+#################### CI JOBS
+###############################################################################
+
+############################################
+#### gitlab-test
+############################################
+
+# As a GitLab ci, we use the default template :)
+sast:
+  stage: gitlab-test
+include:
+- template: Security/SAST.gitlab-ci.yml
+  allow_failure: false
+
+############################################
+#### yaml-lint
+############################################
+
+yaml_lint:
+  <<: *yaml_lint
+  variables:
+    path: "./*/*.yml"
+
+yaml_lint_molecule:
+  <<: *yaml_lint
+  variables:
+    path: "./molecule/*/*.yml"
+
+yaml_lint_inventories:
+  <<: *yaml_lint
+  variables:
+    path: "./tests/inventory/hosts.yml ./tests/inventory/*/*.yml"
+
+#############################################
+##### jinja2-lint
+#############################################
+
+#jinja2_lint:
+#  <<: *jinja2_lint
+
+############################################
+#### bootstrap_role
+############################################
+
+ansible_lint:
+  <<: *ansible_lint
+
+molecule_test:
+  <<: *molecule_test

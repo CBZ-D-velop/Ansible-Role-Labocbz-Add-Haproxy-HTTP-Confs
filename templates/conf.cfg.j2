@@ -1,0 +1,45 @@
+##############################
+#                            #
+# Ansible / Tower managed on #
+#                            #
+##############################
+
+frontend {{ configuration.name }}-frontend
+    #
+    {% if configuration.frontend.description is defined %}
+    description {{ configuration.frontend.description }}
+    {% endif %}
+    mode {{ configuration.frontend.mode }}
+    {% if configuration.frontend.https == true %}
+    bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}" ssl crt {{ haproxy_ssl_path }}/{{ configuration.name }}/{{ configuration.name }}.pem
+    {% else %}
+    bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}"
+    {% endif %}
+    #
+    default_backend {{ configuration.name }}-backend
+
+backend {{ configuration.name }}-backend
+    #
+    balance {{ configuration.backend.balance }}
+    mode {{ configuration.frontend.mode }}
+    #
+    {% if configuration.backend.options is defined %}
+    {% for option in configuration.backend.options %}
+    option {{ option }}
+    {% endfor %}
+    {% endif %}
+    #
+    cookie SERVERID insert indirect nocache
+    http-request set-header X-Forwarded-Port {{ configuration.backend.forwardedPort}}
+    http-request add-header X-Forwarded-Proto https if { ssl_fc }
+    #
+    {% if configuration.backend.httpCheckStatus is defined %}
+    http-check expect status {{ configuration.backend.httpCheckStatus }}
+    {% endif %}
+
+    #
+    {% for server in configuration.backend.servers %}
+    server {{ server.name }} {{ server.addresse }}:{{ server.port }} cookie S{{ loop.index }} {% if server.https == true %}ssl verify none{% endif %} check inter 2s fall 3 rise 3 {% if server.backup is defined %}{% if server.backup == true %} backup {% endif %}{% endif %}
+    
+    {% endfor %}
+

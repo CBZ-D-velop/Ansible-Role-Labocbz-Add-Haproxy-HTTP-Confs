@@ -1,0 +1,8 @@
+---
+- name: "Restart HAProxy"
+  register: haproxy_service_status
+  changed_when: haproxy_service_status.state != "restarted"
+  ansible.builtin.service:
+    name: "haproxy"
+    state: "restarted"
+    daemon_reload: true

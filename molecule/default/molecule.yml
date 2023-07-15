@@ -1,0 +1,79 @@
+---
+dependency:
+  name: "galaxy"
+  options:
+    ignore-certs: true
+
+driver:
+  name: "docker"
+
+platforms:
+  - name: "molecule-local-instance-1-add-haproxy-http-confs"
+    #image: "docker.io/geerlingguy/docker-debian11-ansible"
+    image: "local/debian-11-ansible:v3.0"
+    published_ports:
+      - "0.0.0.0:8181:8181/tcp"
+      - "0.0.0.0:10030:10030/tcp"
+      - "0.0.0.0:10031:10031/tcp"
+    auto_config: true
+    dockerfile: "Dockerfile"
+    privileged: true
+    pre_build_image: true
+    override_command: true
+    command: "/sbin/init"
+    tmpfs:
+      - "/run"
+      - "/tmp"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+      - "/var/lib/containerd:/var/lib/containerd"
+    cgroupns_mode: "host"
+    cgroup_manager: "cgroupfs"
+    #storage_opt: overlay.mount_program=/usr/bin/fuse-overlayfs
+    #storage_driver: overlay
+
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+  flake8
+
+provisioner:
+  name: "ansible"
+  inventory:
+    links:
+      hosts: "../../tests/inventory/hosts.yml"
+      group_vars: "../../tests/inventory/group_vars/"
+      host_vars: "../../tests/inventory/host_vars/"
+  options:
+    extra-vars: "@./tests/tower/tower.yml"
+  log: ${MOLECULE_ANSIBLE_LOG:-true}
+  env:
+    ANSIBLE_CONFIG: "../../.ansible.cfg"
+    ANSIBLE_FORCE_COLOR: "True"
+    # disable nologs
+    MOLECULE_NOLOG: 0
+    # disable destroy
+    MOLECULE_DESTROY: "never"
+    # debug mode (same as --debug) -- very verbose
+    MOLECULE_DEBUG: 1
+    # change ansible own verbosity
+    ANSIBLE_VERBOSITY: 1
+
+verifier:
+  name: "ansible"
+
+scenario:
+  name: "default"
+  test_sequence:
+    - "lint"
+    - "destroy"
+    #- "dependency" # need a "requirements.yml" file
+    - "syntax"
+    - "create"
+    - "prepare"
+    - "converge"
+    - "idempotence"
+    #- "side_effect" # need a "requirements.yml" file
+    - "verify"
+    - "destroy"

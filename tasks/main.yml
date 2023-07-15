@@ -1,0 +1,27 @@
+---
+- name: "Verify HAProxy installation"
+  block:
+    - name: "Get HAProxy service current state"
+      register: haproxy_service_status
+      failed_when: not (haproxy_service_status.status.ActiveState == 'active' or haproxy_service_status.status.ActiveState == 'failed' or haproxy_service_status.status.ActiveState == 'inactive')
+      ansible.builtin.systemd:
+        name: "haproxy"
+
+    - name: "Check if {{ haproxy_confs_path }} directory exist"
+      register: host_working_folder
+      failed_when: not host_working_folder.stat.exists
+      ansible.builtin.stat:
+        path: "{{ haproxy_confs_path }}"
+
+- name: "Create HAProxy sub conf file: {{ item.name }}.cfg"
+  loop: "{{ haproxy_configurations }}"
+  loop_control:
+    loop_var: configuration
+  notify: "Restart HAProxy"
+  ansible.builtin.template:
+    src: "templates/conf.cfg.j2"
+    dest: "{{ haproxy_confs_path }}/{{ configuration.name }}.cfg"
+    lstrip_blocks: yes
+    owner: "root"
+    group: "root"
+    mode: 0600

@@ -1,0 +1,53 @@
+---
+# Don't forget to keep this file updated
+# molecule/<scenario>/verify.yml
+- name: "Verify"
+  hosts: "all"
+  gather_facts: false
+  tasks:
+
+    - name: "Get HAProxy service current state"
+      register: haproxy_service_status
+      failed_when: not haproxy_service_status.status.ActiveState == 'active'
+      ansible.builtin.systemd:
+        name: "haproxy"
+
+    - name: "Check HAProxy confs files"
+      loop: "{{ inv_haproxy_configurations }}"
+      loop_control:
+        loop_var: configuration
+      register: file_check
+      failed_when: not file_check.stat.exists
+      ansible.builtin.stat:
+        path: "{{ inv_haproxy_confs_path }}/{{ configuration.name }}.cfg"
+
+    - name: "Check HAProxy connectivities TCP"
+      loop: "{{ inv_haproxy_configurations }}"
+      loop_control:
+        loop_var: configuration
+      ansible.builtin.wait_for:
+        host: "{{ inventory_hostname }}"
+        port: "{{ configuration.frontend.port }}"
+        timeout: 120
+
+    - name: "Check HAProxy connectivities HTTP"
+      when: not configuration.frontend.https
+      loop: "{{ inv_haproxy_configurations }}"
+      loop_control:
+        loop_var: configuration
+      register: result
+      failed_when: result.status != 503 # Because we are redirecting on the HAProxy root
+      ansible.builtin.uri:
+        url: "http://localhost:{{ configuration.frontend.port }}"
+        method: "GET"
+
+    - name: "Check HAProxy connectivities HTTPS"
+      when: configuration.frontend.https
+      loop: "{{ inv_haproxy_configurations }}"
+      loop_control:
+        loop_var: configuration
+      register: result
+      failed_when: result.status != 503 # Because we are redirecting on the HAProxy root
+      ansible.builtin.uri:
+        url: "https://localhost:{{ configuration.frontend.port }}"
+        method: "GET"

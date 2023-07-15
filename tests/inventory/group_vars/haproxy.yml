@@ -1,0 +1,22 @@
+---
+inv_haproxy_path: "/etc/haproxy"
+inv_haproxy_confs_path: "{{ inv_haproxy_path }}/conf.d"
+inv_haproxy_error_path: "{{ inv_haproxy_path }}/errors"
+inv_haproxy_ssl_path: "{{ inv_haproxy_path }}/ssl"
+
+inv_haproxy_error_files:
+  - "400"
+  - "403"
+  - "408"
+  - "500"
+  - "502"
+  - "503"
+  - "504"
+
+inv_haproxy_listen_stats: true
+inv_haproxy_listen_stats_https: true
+inv_haproxy_listen_stats_domain: "my.https.balancer.domain.tld"
+inv_haproxy_listen_stats_port: 8181
+inv_haproxy_listen_stats_uri: "haproxy/stats"
+inv_haproxy_stats_login: "joe"
+inv_haproxy_stats_password: "passwd"
