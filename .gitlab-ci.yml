@@ -114,8 +114,8 @@ yaml_lint_inventories:
 ##### jinja2-lint
 #############################################
 
-#jinja2_lint:
-#  <<: *jinja2_lint
+jinja2_lint:
+  <<: *jinja2_lint
 
 ############################################
 #### bootstrap_role

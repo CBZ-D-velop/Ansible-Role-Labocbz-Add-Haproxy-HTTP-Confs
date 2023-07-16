@@ -18,6 +18,16 @@
 
 An Ansible role create and add HAProxy HTTP confs to your server.
 
+The role is designed to create HAProxy configurations tailored for HTTP/HTTPS services. It operates through a set of YAML-based configuration objects, providing extensive flexibility in defining various aspects of the HAProxy setup.
+
+The administrator can easily specify the frontend and backend configurations for different websites using the role's parameters. Each website can be assigned a unique name, and its corresponding frontend can be configured with essential details like descriptions, bind addresses, ports, and whether HTTPS is enabled.
+
+For the backend, the role offers the ability to choose the load balancing mode (e.g., round-robin, least connections), set various options (e.g., httpclose, forwardfor, httpchk), define the forwarded port (commonly 443 for HTTPS), and set the desired HTTP check status.
+
+Additionally, administrators can specify multiple servers within a backend, each representing a separate backend server that HAProxy will forward requests to. For each server, the role allows the specification of names, addresses, ports, and whether HTTPS is enabled. Moreover, a backup mode can be enabled for certain servers to ensure fault tolerance.
+
+In summary, the role complements an existing HAProxy installation by enabling the creation of customized configurations for HTTP/HTTPS services. With its flexible YAML-based approach, administrators can easily define various parameters, including ports, SSL settings, load balancing options, and backend server configurations. The role provides a powerful solution for tailoring HAProxy configurations to meet the specific requirements of different websites and services.
+
 ## Folder structure
 
 By default Ansible will look in each directory within a role for a main.yml file for relevant content (also man.yml and main):

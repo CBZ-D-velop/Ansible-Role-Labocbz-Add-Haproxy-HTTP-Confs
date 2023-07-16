@@ -6,11 +6,11 @@
 
 frontend {{ configuration.name }}-frontend
     #
-    {% if configuration.frontend.description is defined %}
+    {% if configuration.frontend.description | default(false) %}
     description {{ configuration.frontend.description }}
     {% endif %}
     mode {{ configuration.frontend.mode }}
-    {% if configuration.frontend.https == true %}
+    {% if configuration.frontend.https | default(false) %}
     bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}" ssl crt {{ haproxy_ssl_path }}/{{ configuration.name }}/{{ configuration.name }}.pem
     {% else %}
     bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}"
@@ -23,7 +23,7 @@ backend {{ configuration.name }}-backend
     balance {{ configuration.backend.balance }}
     mode {{ configuration.frontend.mode }}
     #
-    {% if configuration.backend.options is defined %}
+    {% if configuration.backend.options | default(false) %}
     {% for option in configuration.backend.options %}
     option {{ option }}
     {% endfor %}

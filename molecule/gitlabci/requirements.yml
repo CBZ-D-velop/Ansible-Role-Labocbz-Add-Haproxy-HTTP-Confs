@@ -2,3 +2,11 @@
 - name: "labocbz.prepare_host"
   src: "https://github.com/CBZ-D-velop/Ansible-Role-Labocbz-Prepare-Host.git"
   version: "1.0"
+
+- name: "labocbz.add_certificates"
+  src: "https://github.com/CBZ-D-velop/Ansible-Role-Labocbz-Add-Certificates.git"
+  version: "1.0"
+
+- name: "labocbz.install_haproxy"
+  src: "https://github.com/CBZ-D-velop/Ansible-Role-Labocbz-Install-Haproxy.git"
+  version: "1.0"
