@@ -51,3 +51,4 @@
       ansible.builtin.uri:
         url: "https://{{ inventory_hostname }}:{{ configuration.frontend.port }}"
         method: "GET"
+        validate_certs: false

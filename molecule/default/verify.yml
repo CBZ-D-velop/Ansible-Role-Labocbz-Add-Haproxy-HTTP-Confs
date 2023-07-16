@@ -38,7 +38,7 @@
       register: result
       failed_when: result.status != 503 # Because we are redirecting on the HAProxy root
       ansible.builtin.uri:
-        url: "http://localhost:{{ configuration.frontend.port }}"
+        url: "http://{{ inventory_hostname }}:{{ configuration.frontend.port }}"
         method: "GET"
 
     - name: "Check HAProxy connectivities HTTPS"
@@ -49,5 +49,6 @@
       register: result
       failed_when: result.status != 503 # Because we are redirecting on the HAProxy root
       ansible.builtin.uri:
-        url: "https://localhost:{{ configuration.frontend.port }}"
+        url: "https://{{ inventory_hostname }}:{{ configuration.frontend.port }}"
         method: "GET"
+        validate_certs: false
