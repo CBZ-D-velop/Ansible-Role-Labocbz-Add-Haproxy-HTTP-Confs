@@ -1,10 +1,10 @@
 ---
 
 inv_cert_bundles:
-  - name: "My-Local-CA-Authority"
+  - name: "My-Local-Middle-Two-CA"
     type: "CA"
-    src: "/tmp/My-Local-CA-Authority.zip"
-    dest: "/usr/local/share/ca-certificates"
+    src: "/tmp/My-Local-Middle-Two-CA.zip"
+    dest: "/etc/haproxy/ssl"
     #src_user: "myUser"
     #src_password: "secretPassword"
     #dest_user: "root"
