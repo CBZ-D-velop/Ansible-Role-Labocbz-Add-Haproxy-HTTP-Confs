@@ -14,7 +14,7 @@ stages:
 - molecule-test
 
 variables:
-  PIPELINE_SCENARIO_name: "cicd-debian-11"
+  PIPELINE_SCENARIO_NAME: "cicd-debian-11"
 
 ###############################################################################
 #################### actions
@@ -25,7 +25,11 @@ variables:
 # we dont need to test rest of the pipeline
 .yaml_lint: &yaml_lint
   stage: yaml-lint
-  image: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DEBIAN_ANSIBLE
+  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_YAML_LINT
+  before_script:
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - "chmod o-w ."
   script:
     - yamllint -c ./.yamllint $path # Here mains files
   allow_failure: false
@@ -36,42 +40,43 @@ variables:
 # we dont need to test rest of the pipeline
 .jinja2_lint: &jinja2_lint
   stage: jinja2-lint
-  image:
-    name: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DEBIAN_JINJA
-    entrypoint: ["/bin/sh", "-c"]
-  script:
+  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_JINJA_LINT
+  before_script:
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
-    - chmod o-w .
-    - >
-      find ./templates/*.j2 \( -name '*' ! -iname ".*" \)
-      -print0 | sort --zero-terminated | xargs -0 -I{} sh -c  '/usr/bin/python /j2lint.py {}'
+    - "chmod o-w ."
+  script:
+    - "j2lint ./templates/*.j2"
   allow_failure: false
   retry: 2
 
 .ansible_lint: &ansible_lint
   stage: ansible-lint
-  image: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DEBIAN_ANSIBLE
+  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_ANSIBLE_LINT
+  before_script:
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - "chmod o-w ."
   script:
-    - ansible-lint --config=./.ansible-lint ./*
+    - ansible-lint --config=./.ansible-lint --exclude molecule --exclude tests ./*
   allow_failure: false
   retry: 2
 
 .molecule_test: &molecule_test
   stage: molecule-test
-  image:
-    name: $DOCKER_NEXUS_ADDRESS/$DOCKER_IMAGE_DOCKER_ANSIBLE
+  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_DOCKER_MOLECULE
   variables:
     PY_COLORS: '1'
     ANSIBLE_FORCE_COLOR: '1'
-  script:
-    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" http://$DOCKER_NEXUS_ADDRESS"
+  before_script:
+    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" http://$NEXUS_ADDRESS"
     - "python3 -m compileall /usr/lib/python3 -qq"
+    - "cp ./.ansible.cfg /root/.ansible.cfg"
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
-    - "cp ./.ansible.cfg /root/.ansible.cfg"
     - "chmod o-w ."
     - "[ -f \"./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml\" ] && ansible-galaxy install -r ./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml --roles-path=./molecule/$PIPELINE_SCENARIO_NAME/roles"
+  script:
     - "molecule test --scenario-name $PIPELINE_SCENARIO_NAME"
   allow_failure: false
   retry: 2
@@ -95,7 +100,7 @@ include:
 #### yaml-lint
 ############################################
 
-yaml_lint:
+yaml_lint_role:
   <<: *yaml_lint
   variables:
     path: "./*/*.yml"
@@ -110,19 +115,36 @@ yaml_lint_inventories:
   variables:
     path: "./tests/inventory/hosts.yml ./tests/inventory/*/*.yml"
 
+yaml_lint_extra_vars:
+  <<: *yaml_lint
+  variables:
+    path: "./tests/certs/main.yml ./tests/tower/tower.yml"
+
 #############################################
 ##### jinja2-lint
 #############################################
 
-jinja2_lint:
+jinja2_lint_templates:
   <<: *jinja2_lint
 
 ############################################
-#### bootstrap_role
+#### ansible-lint
 ############################################
 
 ansible_lint:
   <<: *ansible_lint
+  needs:
+    - "yaml_lint_role"
+    - "yaml_lint_molecule"
+    - "yaml_lint_inventories"
+    - "yaml_lint_extra_vars"
+    - "jinja2_lint_templates"
+
+############################################
+#### moelcule test
+############################################
 
 molecule_test:
   <<: *molecule_test
+  needs:
+    - "ansible_lint"
