@@ -9,14 +9,14 @@ driver:
 
 platforms:
   - name: "molecule-local-instance-1-add-haproxy-http-confs"
-    image: "nexus-manager.net3107.storages.labo-cbz.net:8082/gitlabcicd/debian-11-ansible:v3.0"
+    image: "${NEXUS_ADDRESS}/${DOCKER_IMAGE_DEBIAN_11_ANSIBLE}"
+    command: "/sbin/init"
     #published_ports:
     #  - "0.0.0.0:8181:8181/tcp"
     dockerfile: "Dockerfile"
     privileged: true
     pre_build_image: true
     override_command: true
-    command: "/sbin/init"
     tmpfs:
       - "/run"
       - "/tmp"
@@ -27,12 +27,6 @@ platforms:
     cgroup_manager: "cgroupfs"
     #storage_opt: "overlay.mount_program=/usr/bin/fuse-overlayfs"
     #storage_driver: "overlay"
-
-lint: |
-  set -e
-  yamllint .
-  ansible-lint
-  flake8
 
 provisioner:
   name: "ansible"
@@ -60,16 +54,13 @@ verifier:
   name: "ansible"
 
 scenario:
-  name: "gitlabci"
+  name: "cicd-debian-11"
   test_sequence:
-    #- "lint"
     - "destroy"
-    #- "dependency" # need a "requirements.yml" file
     - "syntax"
     - "create"
     - "prepare"
     - "converge"
     - "idempotence"
-    #- "side_effect" # need a "requirements.yml" file
     - "verify"
     - "destroy"
