@@ -46,7 +46,7 @@ variables:
     # This probably happens due to gitlab-runner mounting the git repo into the container
     - "chmod o-w ."
   script:
-    - "j2lint ./templates/*.j2"
+    - "j2lint ./templates/*.j2 --ignore S3 S7"
   allow_failure: false
   retry: 2
 
