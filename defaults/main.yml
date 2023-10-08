@@ -11,13 +11,13 @@ haproxy_configurations:
       https: false
       mode: "http"
     backend:
-      balance: roundrobin
+      balance: "roundrobin"
       options:
-        - httpclose
-        - forwardfor
-        - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 301
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 301
       servers:
         - name: "backend-server-1"
           addresse: "backend1.internal.domain.tld"
@@ -32,13 +32,13 @@ haproxy_configurations:
       https: true
       mode: "http"
     backend:
-      balance: leastconn
+      balance: "leastconn"
       options:
-        - httpclose
-        - forwardfor
-        - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 200
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 200
       servers:
         - name: "backend-server-1-as-BACKUP"
           addresse: "backend1.internal.domain.tld"

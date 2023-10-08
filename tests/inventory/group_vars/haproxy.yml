@@ -20,3 +20,51 @@ inv_haproxy_listen_stats_port: 8181
 inv_haproxy_listen_stats_uri: "haproxy/stats"
 inv_haproxy_stats_login: "joe"
 inv_haproxy_stats_password: "passwd"
+
+inv_haproxy_configurations:
+  - name: "my.website.domain.tld"
+    frontend:
+      description: "My first website  with HTTP frontend address"
+      bind: "*"
+      port: 10030
+      https: false
+      mode: "http"
+    backend:
+      balance: "roundrobin"
+      options:
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 301
+      servers:
+        - name: "backend-server-1"
+          addresse: "backend1.internal.domain.tld"
+          port: "80"
+          https: false
+
+  - name: "my.https.website.domain.tld"
+    frontend:
+      description: "My website but with HTTPS frontend access"
+      bind: "*"
+      port: 10031
+      https: true
+      mode: "http"
+    backend:
+      balance: "leastconn"
+      options:
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 200
+      servers:
+        - name: "backend-server-1-as-BACKUP"
+          addresse: "backend1.internal.domain.tld"
+          port: 443
+          https: true
+          backup: true
+        - name: "backend-server-2"
+          addresse: "backend2.internal.domain.tld"
+          port: 443
+          https: true

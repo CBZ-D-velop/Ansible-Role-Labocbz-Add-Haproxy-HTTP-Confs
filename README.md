@@ -123,13 +123,13 @@ haproxy_configurations:
       https: false
       mode: "http"
     backend:
-      balance: roundrobin
+      balance: "roundrobin"
       options:
-        - httpclose
-        - forwardfor
-        - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 301
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 301
       servers:
         - name: "backend-server-1"
           addresse: "backend1.internal.domain.tld"
@@ -144,13 +144,13 @@ haproxy_configurations:
       https: true
       mode: "http"
     backend:
-      balance: leastconn
+      balance: "leastconn"
       options:
-        - httpclose
-        - forwardfor
-        - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 200
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 200
       servers:
         - name: "backend-server-1-as-BACKUP"
           addresse: "backend1.internal.domain.tld"
@@ -185,43 +185,43 @@ inv_haproxy_configurations:
       https: false
       mode: "http"
     backend:
-      balance: roundrobin
+      balance: "roundrobin"
       options:
-        - httpclose
-        - forwardfor
-        - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 503
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 301
       servers:
         - name: "backend-server-1"
-          addresse: "127.0.0.1"
-          port: "8181"
-          https: true
+          addresse: "backend1.internal.domain.tld"
+          port: "80"
+          https: false
 
   - name: "my.https.website.domain.tld"
     frontend:
-      description: "My HTTPS website but with 1 server as backup"
+      description: "My website but with HTTPS frontend access"
       bind: "*"
       port: 10031
       https: true
       mode: "http"
     backend:
-      balance: leastconn
+      balance: "leastconn"
       options:
-        - httpclose
-        - forwardfor
-        - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 503
+        - "httpclose"
+        - "forwardfor"
+        - "httpchk GET /"
+      forwarded_port: 443
+      http_check_status: 200
       servers:
         - name: "backend-server-1-as-BACKUP"
-          addresse: "127.0.0.1"
-          port: 8181
+          addresse: "backend1.internal.domain.tld"
+          port: 443
           https: true
           backup: true
         - name: "backend-server-2"
-          addresse: "127.0.0.1"
-          port: 8181
+          addresse: "backend2.internal.domain.tld"
+          port: 443
           https: true
 
 ```
