@@ -18,6 +18,8 @@
   loop_control:
     loop_var: configuration
   notify: "Restart HAProxy"
+  vars:
+    configuration_fullchain: "{{ haproxy_ssl_path }}/{{ configuration.name }}-fullchain.pem"
   ansible.builtin.template:
     src: "templates/conf.cfg.j2"
     dest: "{{ haproxy_confs_path }}/{{ configuration.name }}.cfg"
@@ -25,3 +27,15 @@
     owner: "root"
     group: "root"
     mode: "0600"
+
+- name: "Create fullchain file"
+  register: output
+  changed_when: output.rc != 0
+  loop: "{{ haproxy_configurations }}"
+  loop_control:
+    loop_var: configuration
+  when: configuration.frontend.https | default(false)
+  notify: "Restart HAProxy"
+  vars:
+    configuration_fullchain: "{{ haproxy_ssl_path }}/{{ configuration.name }}-fullchain.pem"
+  ansible.builtin.shell: cat {{ configuration.frontend.crt }} {{ configuration.frontend.key }} > {{ configuration_fullchain }}

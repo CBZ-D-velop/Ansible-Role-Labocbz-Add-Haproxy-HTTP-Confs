@@ -16,8 +16,8 @@ inv_haproxy_configurations:
         - httpclose
         - forwardfor
         - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 503
+      forwarded_port: 443
+      http_check_status: 503
       servers:
         - name: "backend-server-1"
           addresse: "127.0.0.1"
@@ -30,6 +30,8 @@ inv_haproxy_configurations:
       bind: "*"
       port: 10031
       https: true
+      crt: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -37,8 +39,8 @@ inv_haproxy_configurations:
         - httpclose
         - forwardfor
         - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 503
+      forwarded_port: 443
+      http_check_status: 503
       servers:
         - name: "backend-server-1-as-BACKUP"
           addresse: "127.0.0.1"

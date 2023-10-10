@@ -11,7 +11,7 @@ frontend {{ configuration.name }}-frontend
     {% endif %}
     mode {{ configuration.frontend.mode }}
     {% if configuration.frontend.https | default(false) %}
-    bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}" ssl crt {{ haproxy_ssl_path }}/{{ configuration.name }}/{{ configuration.name }}.pem
+    bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}" ssl crt {{ configuration_fullchain }}
     {% else %}
     bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}"
     {% endif %}
