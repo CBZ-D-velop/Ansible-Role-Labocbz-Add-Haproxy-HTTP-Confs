@@ -128,20 +128,22 @@ haproxy_configurations:
         - httpclose
         - forwardfor
         - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 301
+      forwarded_port: 443
+      http_check_status: 503
       servers:
         - name: "backend-server-1"
-          addresse: "backend1.internal.domain.tld"
-          port: "80"
-          https: false
+          addresse: "127.0.0.1"
+          port: "8181"
+          https: true
 
   - name: "my.https.website.domain.tld"
     frontend:
-      description: "My website but with HTTPS frontend access"
+      description: "My HTTPS website but with 1 server as backup"
       bind: "*"
       port: 10031
       https: true
+      crt: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -149,17 +151,17 @@ haproxy_configurations:
         - httpclose
         - forwardfor
         - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 200
+      forwarded_port: 443
+      http_check_status: 503
       servers:
         - name: "backend-server-1-as-BACKUP"
-          addresse: "backend1.internal.domain.tld"
-          port: 443
+          addresse: "127.0.0.1"
+          port: 8181
           https: true
           backup: true
         - name: "backend-server-2"
-          addresse: "backend2.internal.domain.tld"
-          port: 443
+          addresse: "127.0.0.1"
+          port: 8181
           https: true
 
 ```
@@ -190,8 +192,8 @@ inv_haproxy_configurations:
         - httpclose
         - forwardfor
         - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 503
+      forwarded_port: 443
+      http_check_status: 503
       servers:
         - name: "backend-server-1"
           addresse: "127.0.0.1"
@@ -204,6 +206,8 @@ inv_haproxy_configurations:
       bind: "*"
       port: 10031
       https: true
+      crt: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -211,8 +215,8 @@ inv_haproxy_configurations:
         - httpclose
         - forwardfor
         - httpchk GET /
-      forwardedPort: 443
-      httpCheckStatus: 503
+      forwarded_port: 443
+      http_check_status: 503
       servers:
         - name: "backend-server-1-as-BACKUP"
           addresse: "127.0.0.1"
@@ -265,6 +269,18 @@ Here you can put your change to keep a trace of your work and decisions.
 
 * SSL/TLS Materials are not handled by the role
 * Certs/CA have to be installed previously/after this role use
+
+### 2023-10-06: New CICD, new Images
+
+* New CI/CD scenario name
+* Molecule now use remote Docker image by Lord Robin Crombez
+* Molecule now use custom Docker image in CI/CD by env vars
+* New CICD with needs and optimization
+
+### 2023-10-10: New SSL handling
+
+* You can now provide custom key and certs
+* Use the latest version of HAproxy role
 
 ## Authors
 

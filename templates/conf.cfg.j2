@@ -11,7 +11,7 @@ frontend {{ configuration.name }}-frontend
     {% endif %}
     mode {{ configuration.frontend.mode }}
     {% if configuration.frontend.https | default(false) %}
-    bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}" ssl crt {{ haproxy_ssl_path }}/{{ configuration.name }}/{{ configuration.name }}.pem
+    bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}" ssl crt {{ configuration_fullchain }}
     {% else %}
     bind "{{ configuration.frontend.bind }}:{{ configuration.frontend.port }}"
     {% endif %}
@@ -24,17 +24,17 @@ backend {{ configuration.name }}-backend
     mode {{ configuration.frontend.mode }}
     #
     {% if configuration.backend.options | default(false) %}
-    {% for option in configuration.backend.options %}
+        {% for option in configuration.backend.options %}
     option {{ option }}
-    {% endfor %}
+        {% endfor %}
     {% endif %}
     #
     cookie SERVERID insert indirect nocache
-    http-request set-header X-Forwarded-Port {{ configuration.backend.forwardedPort}}
+    http-request set-header X-Forwarded-Port {{ configuration.backend.forwarded_port }}
     http-request add-header X-Forwarded-Proto https if { ssl_fc }
     #
-    {% if configuration.backend.httpCheckStatus is defined %}
-    http-check expect status {{ configuration.backend.httpCheckStatus }}
+    {% if configuration.backend.http_check_status | default(false) %}
+    http-check expect status {{ configuration.backend.http_check_status }}
     {% endif %}
 
     #

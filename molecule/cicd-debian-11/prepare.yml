@@ -23,14 +23,26 @@
       when: host != ansible_host
       ansible.builtin.shell: "echo \"{{ hostvars[host]['ansible_default_ipv4']['address'] }}  {{ host }} # from Molecule\" >> /etc/hosts"
 
-    - name: "Import cryptographic content if needed"
-      run_once: yes
+    - name: "Import cryptographic content if needed (cert)"
       loop: "{{ inv_cert_bundles }}"
       loop_control:
         loop_var: bundle
+      when: inv_cert_bundles is defined and bundle.type == "cert"
       ansible.builtin.copy:
         src: "../../tests/certs/{{ bundle.name }}.zip"
         dest: "/tmp/{{ bundle.name }}.zip"
+        owner: "root"
+        group: "root"
+        mode: 0700
+
+    - name: "Import cryptographic content if needed (CA)"
+      loop: "{{ inv_cert_bundles }}"
+      loop_control:
+        loop_var: bundle
+      when: inv_cert_bundles is defined and bundle.type == "CA"
+      ansible.builtin.copy:
+        src: "../../tests/certs/{{ bundle.name }}"
+        dest: "/tmp/{{ bundle.name }}"
         owner: "root"
         group: "root"
         mode: 0700
@@ -41,6 +53,7 @@
       loop: "{{ inv_cert_bundles }}"
       loop_control:
         loop_var: bundle
+      when: inv_cert_bundles is defined
       vars:
         add_certificates_bundle_name: "{{ bundle.name }}"
         add_certificates_bundle_type: "{{ bundle.type }}"
@@ -68,7 +81,8 @@
         haproxy_listen_stats_uri: "{{ inv_haproxy_listen_stats_uri }}"
         haproxy_stats_login: "{{ inv_haproxy_stats_login }}"
         haproxy_stats_password: "{{ inv_haproxy_stats_password }}"
-        haproxy_listen_stats_pem: "{{ inv_haproxy_listen_stats_pem }}"
         haproxy_listen_stats_https: "{{ inv_haproxy_listen_stats_https }}"
+        haproxy_listen_stats_cert: "{{ inv_haproxy_listen_stats_cert }}"
+        haproxy_listen_stats_key: "{{ inv_haproxy_listen_stats_key }}"
       ansible.builtin.include_role:
         name: "labocbz.install_haproxy"
