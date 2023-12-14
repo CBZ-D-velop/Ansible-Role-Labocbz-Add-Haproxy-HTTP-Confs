@@ -1,8 +1,12 @@
 ---
-inv_haproxy_confs_path: "/etc/haproxy/conf.d"
-inv_haproxy_ssl_path: "/etc/haproxy/ssl"
+inv_prepare_host_system_users:
+  - login: "haproxy"
+    group: "haproxy"
 
-inv_haproxy_configurations:
+inv_add_haproxy_http_confs_confs_path: "/etc/haproxy/conf.d"
+inv_add_haproxy_http_confs_ssl_path: "/etc/haproxy/ssl"
+
+inv_add_haproxy_http_confs_configurations:
   - name: "my.website.domain.tld"
     frontend:
       description: "My first website  with HTTP frontend address"
@@ -30,8 +34,8 @@ inv_haproxy_configurations:
       bind: "*"
       port: 10031
       https: true
-      crt: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
-      key: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
+      crt: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn

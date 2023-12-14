@@ -1,4 +1,4 @@
-# Ansible role: labocbz.add_haproxy_http_confs
+# Ansible role: labocbz.add_add_haproxy_http_confs_http_confs
 
 ![Licence Status](https://img.shields.io/badge/licence-MIT-brightgreen)
 ![CI Status](https://img.shields.io/badge/CI-success-brightgreen)
@@ -111,10 +111,13 @@ Some vars a required to run this role:
 
 ```YAML
 ---
-haproxy_confs_path: "/etc/haproxy/conf.d"
-haproxy_ssl_path: "/etc/haproxy/ssl"
+add_haproxy_http_confs_confs_path: "/etc/haproxy/conf.d"
+add_haproxy_http_confs_ssl_path: "/etc/haproxy/ssl"
 
-haproxy_configurations:
+add_haproxy_http_confs_haproxy_group: "haproxy"
+add_haproxy_http_confs_haproxy_user: "haproxy"
+
+add_haproxy_http_confs_configurations:
   - name: "my.website.domain.tld"
     frontend:
       description: "My first website  with HTTP frontend address"
@@ -142,8 +145,8 @@ haproxy_configurations:
       bind: "*"
       port: 10031
       https: true
-      crt: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
-      key: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
+      crt: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -175,10 +178,10 @@ In order to surchage vars, you have multiples possibilities but for mains cases 
 ```YAML
 # From inventory
 ---
-inv_haproxy_confs_path: "/etc/haproxy/conf.d"
-inv_haproxy_ssl_path: "/etc/haproxy/ssl"
+inv_add_haproxy_http_confs_confs_path: "/etc/haproxy/conf.d"
+inv_add_haproxy_http_confs_ssl_path: "/etc/haproxy/ssl"
 
-inv_haproxy_configurations:
+inv_add_haproxy_http_confs_configurations:
   - name: "my.website.domain.tld"
     frontend:
       description: "My first website  with HTTP frontend address"
@@ -206,8 +209,8 @@ inv_haproxy_configurations:
       bind: "*"
       port: 10031
       https: true
-      crt: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
-      key: "{{ inv_haproxy_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
+      crt: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -241,15 +244,15 @@ inv_haproxy_configurations:
 To run this role, you can copy the molecule/default/converge.yml playbook and add it into your playbook:
 
 ```YAML
-- name: "Include labocbz.add_haproxy_http_confs"
+- name: "Include labocbz.add_add_haproxy_http_confs_http_confs"
   tags:
-    - "labocbz.add_haproxy_http_confs"
+    - "labocbz.add_add_haproxy_http_confs_http_confs"
   vars:
-    haproxy_confs_path: "{{ inv_haproxy_confs_path }}"
-    haproxy_configurations: "{{ inv_haproxy_configurations }}"
-    haproxy_ssl_path: "{{ inv_haproxy_ssl_path }}"
+    add_haproxy_http_confs_confs_path: "{{ inv_add_haproxy_http_confs_confs_path }}"
+    add_haproxy_http_confs_configurations: "{{ inv_add_haproxy_http_confs_configurations }}"
+    add_haproxy_http_confs_ssl_path: "{{ inv_add_haproxy_http_confs_ssl_path }}"
   ansible.builtin.include_role:
-    name: "labocbz.add_haproxy_http_confs"
+    name: "labocbz.add_add_haproxy_http_confs_http_confs"
 ```
 
 ## Architectural Decisions Records
@@ -281,6 +284,10 @@ Here you can put your change to keep a trace of your work and decisions.
 
 * You can now provide custom key and certs
 * Use the latest version of HAproxy role
+
+### 2023-12-14: System users
+
+* Role can now use system users and address groups
 
 ## Authors
 

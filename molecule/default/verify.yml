@@ -7,22 +7,22 @@
   tasks:
 
     - name: "Get HAProxy service current state"
-      register: haproxy_service_status
-      failed_when: not haproxy_service_status.status.ActiveState == 'active'
+      register: add_haproxy_http_confs_service_status
+      failed_when: not add_haproxy_http_confs_service_status.status.ActiveState == 'active'
       ansible.builtin.systemd:
         name: "haproxy"
 
     - name: "Check HAProxy confs files"
-      loop: "{{ inv_haproxy_configurations }}"
+      loop: "{{ inv_add_haproxy_http_confs_configurations }}"
       loop_control:
         loop_var: configuration
       register: file_check
       failed_when: not file_check.stat.exists
       ansible.builtin.stat:
-        path: "{{ inv_haproxy_confs_path }}/{{ configuration.name }}.cfg"
+        path: "{{ inv_add_haproxy_http_confs_confs_path }}/{{ configuration.name }}.cfg"
 
     - name: "Check HAProxy connectivities TCP"
-      loop: "{{ inv_haproxy_configurations }}"
+      loop: "{{ inv_add_haproxy_http_confs_configurations }}"
       loop_control:
         loop_var: configuration
       ansible.builtin.wait_for:
@@ -32,7 +32,7 @@
 
     - name: "Check HAProxy connectivities HTTP"
       when: not configuration.frontend.https
-      loop: "{{ inv_haproxy_configurations }}"
+      loop: "{{ inv_add_haproxy_http_confs_configurations }}"
       loop_control:
         loop_var: configuration
       register: result
@@ -43,7 +43,7 @@
 
     - name: "Check HAProxy connectivities HTTPS"
       when: configuration.frontend.https
-      loop: "{{ inv_haproxy_configurations }}"
+      loop: "{{ inv_add_haproxy_http_confs_configurations }}"
       loop_control:
         loop_var: configuration
       register: result

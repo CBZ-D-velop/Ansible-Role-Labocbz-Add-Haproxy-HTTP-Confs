@@ -29,6 +29,6 @@ inv_cert_bundles:
     dest: "/etc/haproxy/ssl"
     #src_user: "myUser"
     #src_password: "secretPassword"
-    dest_user: "root"
-    dest_group: "root"
+    dest_user: "haproxy"
+    dest_group: "haproxy"
     dest_mode: "0700"
