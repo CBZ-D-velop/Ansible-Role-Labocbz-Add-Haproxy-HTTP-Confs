@@ -9,12 +9,12 @@
         dest: "/tmp/hosts-from-controller"
         mode: 0700
 
-    - name: "Include labocbz.add_haproxy_http_confs"
+    - name: "Include labocbz.add_add_haproxy_http_confs_http_confs"
       tags:
-        - "labocbz.add_haproxy_http_confs"
+        - "labocbz.add_add_haproxy_http_confs_http_confs"
       vars:
-        haproxy_confs_path: "{{ inv_haproxy_confs_path }}"
-        haproxy_configurations: "{{ inv_haproxy_configurations }}"
-        haproxy_ssl_path: "{{ inv_haproxy_ssl_path }}"
+        add_haproxy_http_confs_confs_path: "{{ inv_add_haproxy_http_confs_confs_path }}"
+        add_haproxy_http_confs_configurations: "{{ inv_add_haproxy_http_confs_configurations }}"
+        add_haproxy_http_confs_ssl_path: "{{ inv_add_haproxy_http_confs_ssl_path }}"
       ansible.builtin.include_role:
-        name: "labocbz.add_haproxy_http_confs"
+        name: "labocbz.add_add_haproxy_http_confs_http_confs"
