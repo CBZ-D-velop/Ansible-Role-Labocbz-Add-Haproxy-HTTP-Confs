@@ -1,10 +1,10 @@
 ---
-inv_add_haproxy_http_confs_path: "/etc/haproxy"
-inv_add_haproxy_http_confs_confs_path: "{{ inv_add_haproxy_http_confs_path }}/conf.d"
-inv_add_haproxy_http_confs_error_path: "{{ inv_add_haproxy_http_confs_path }}/errors"
-inv_add_haproxy_http_confs_ssl_path: "{{ inv_add_haproxy_http_confs_path }}/ssl"
+inv_install_haproxy_path: "/etc/haproxy"
+inv_install_haproxy_confs_path: "{{ inv_install_haproxy_path }}/conf.d"
+inv_install_haproxy_error_path: "{{ inv_install_haproxy_path }}/errors"
+inv_install_haproxy_ssl_path: "{{ inv_install_haproxy_path }}/ssl"
 
-inv_add_haproxy_http_confs_error_files:
+inv_install_haproxy_error_files:
   - "400"
   - "403"
   - "408"
@@ -13,11 +13,11 @@ inv_add_haproxy_http_confs_error_files:
   - "503"
   - "504"
 
-inv_add_haproxy_http_confs_listen_stats: true
-inv_add_haproxy_http_confs_listen_stats_https: true
-inv_add_haproxy_http_confs_listen_stats_cert: "{{ inv_add_haproxy_http_confs_ssl_path }}/my-haproxy-server.domain.tld/my-haproxy-server.domain.tld.pem.crt"
-inv_add_haproxy_http_confs_listen_stats_key: "{{ inv_add_haproxy_http_confs_ssl_path }}/my-haproxy-server.domain.tld/my-haproxy-server.domain.tld.pem.key"
-inv_add_haproxy_http_confs_listen_stats_port: 8181
-inv_add_haproxy_http_confs_listen_stats_uri: "haproxy/stats"
-inv_add_haproxy_http_confs_stats_login: "joe"
-inv_add_haproxy_http_confs_stats_password: "passwd"
+inv_install_haproxy_listen_stats: true
+inv_install_haproxy_listen_stats_https: true
+inv_install_haproxy_listen_stats_cert: "{{ inv_install_haproxy_ssl_path }}/my-haproxy-server.domain.tld/my-haproxy-server.domain.tld.pem.crt"
+inv_install_haproxy_listen_stats_key: "{{ inv_install_haproxy_ssl_path }}/my-haproxy-server.domain.tld/my-haproxy-server.domain.tld.pem.key"
+inv_install_haproxy_listen_stats_port: 8181
+inv_install_haproxy_listen_stats_uri: "haproxy/stats"
+inv_install_haproxy_stats_login: "joe"
+inv_install_haproxy_stats_password: "passwd"
