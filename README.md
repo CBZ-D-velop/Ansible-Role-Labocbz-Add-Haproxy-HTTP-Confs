@@ -285,6 +285,10 @@ Here you can put your change to keep a trace of your work and decisions.
 * You can now provide custom key and certs
 * Use the latest version of HAproxy role
 
+### 2024-01-17: Add Host head for HTTP Checks
+
+* Role add a conf for mode == http to add a Host header for checks
+
 ### 2023-12-14: System users
 
 * Role can now use system users and address groups
