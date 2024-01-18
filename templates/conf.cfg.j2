@@ -22,7 +22,7 @@ backend {{ configuration.name }}-backend
     #
     balance {{ configuration.backend.balance }}
     mode {{ configuration.frontend.mode }}
-    {% if {{ configuration.frontend.mode }} == http %}
+    {% if configuration.frontend.mode == http %}
     option httpchk HEAD / HTTP/1.1\r\nHost:\ {{ configuration.name }}
     {% endif %}
     #
