@@ -23,7 +23,12 @@ backend {{ configuration.name }}-backend
     balance {{ configuration.backend.balance }}
     mode {{ configuration.frontend.mode }}
     {% if configuration.frontend.mode == "http" %}
-    option httpchk HEAD / HTTP/1.1\r\nHost:\ {{ configuration.name }}
+    option httpchk
+    {% endif %}
+    #
+    {% if configuration.backend.http_check_status | default(false) %}
+    http-check expect status {{ configuration.backend.http_check_status }}
+    http-check send meth GET uri /http-check/index.gif
     {% endif %}
     #
     {% if configuration.backend.options | default(false) %}
@@ -35,11 +40,6 @@ backend {{ configuration.name }}-backend
     cookie SERVERID insert indirect nocache
     http-request set-header X-Forwarded-Port {{ configuration.backend.forwarded_port }}
     http-request add-header X-Forwarded-Proto https if { ssl_fc }
-    #
-    {% if configuration.backend.http_check_status | default(false) %}
-    http-check expect status {{ configuration.backend.http_check_status }}
-    {% endif %}
-
     #
     {% for server in configuration.backend.servers %}
     server {{ server.name }} {{ server.addresse }}:{{ server.port }} cookie S{{ loop.index }} {% if server.https == true %}ssl verify none{% endif %} check inter 2s fall 3 rise 3 {% if server.backup is defined %}{% if server.backup == true %} backup {% endif %}{% endif %}
