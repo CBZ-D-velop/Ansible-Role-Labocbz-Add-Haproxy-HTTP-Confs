@@ -22,18 +22,18 @@ backend {{ configuration.name }}-backend
     #
     balance {{ configuration.backend.balance }}
     mode {{ configuration.frontend.mode }}
-    {% if configuration.frontend.mode == "http" %}
-    option httpchk GET /http-check/index.gif
-    {% endif %}
-    #
-    {% if configuration.backend.http_check_status | default(false) %}
-    http-check expect status {{ configuration.backend.http_check_status }}
-    {% endif %}
     #
     {% if configuration.backend.options | default(false) %}
-        {% for option in configuration.backend.options %}
+    {% for option in configuration.backend.options %}
     option {{ option }}
-        {% endfor %}
+    {% endfor %}
+    {% endif %}
+    #
+    {% if configuration.frontend.mode == "http" %}
+    http-check send meth GET uri /http-check/index.gif
+    {% endif %}
+    {% if configuration.backend.http_check_status | default(false) %}
+    http-check expect status {{ configuration.backend.http_check_status }}
     {% endif %}
     #
     cookie SERVERID insert indirect nocache
