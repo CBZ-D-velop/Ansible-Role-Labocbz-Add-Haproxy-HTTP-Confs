@@ -23,12 +23,11 @@ backend {{ configuration.name }}-backend
     balance {{ configuration.backend.balance }}
     mode {{ configuration.frontend.mode }}
     {% if configuration.frontend.mode == "http" %}
-    option httpchk
+    option httpchk GET /http-check/index.gif
     {% endif %}
     #
     {% if configuration.backend.http_check_status | default(false) %}
     http-check expect status {{ configuration.backend.http_check_status }}
-    http-check send meth GET uri /http-check/index.gif
     {% endif %}
     #
     {% if configuration.backend.options | default(false) %}
