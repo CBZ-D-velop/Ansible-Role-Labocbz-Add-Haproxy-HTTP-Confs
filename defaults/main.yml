@@ -18,7 +18,9 @@ add_haproxy_http_confs_configurations:
       options:
         - httpclose
         - forwardfor
-        - httpchk GET /
+        - httpchk
+      http_check:
+        - "send meth GET uri /http-check/index.gif"
       forwarded_port: 443
       http_check_status: 503
       servers:
