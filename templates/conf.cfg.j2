@@ -29,9 +29,12 @@ backend {{ configuration.name }}-backend
     {% endfor %}
     {% endif %}
     #
-    {% if configuration.frontend.mode == "http" %}
-    http-check send meth GET uri /http-check/index.gif
+    {% if configuration.backend.http_check | default(false) %}
+    {% for check in configuration.backend.http_check %}
+    http-check {{ check }}
+    {% endfor %}
     {% endif %}
+    #
     {% if configuration.backend.http_check_status | default(false) %}
     http-check expect status {{ configuration.backend.http_check_status }}
     {% endif %}

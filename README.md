@@ -130,7 +130,9 @@ add_haproxy_http_confs_configurations:
       options:
         - httpclose
         - forwardfor
-        - httpchk GET /
+        - httpchk
+      http_check:
+        - "send meth GET uri /http-check/index.gif"
       forwarded_port: 443
       http_check_status: 503
       servers:
@@ -194,7 +196,9 @@ inv_add_haproxy_http_confs_configurations:
       options:
         - httpclose
         - forwardfor
-        - httpchk GET /
+        - httpchk
+      http_check:
+        - "send meth GET uri /http-check/index.gif"
       forwarded_port: 443
       http_check_status: 503
       servers:
@@ -292,6 +296,10 @@ Here you can put your change to keep a trace of your work and decisions.
 ### 2023-12-14: System users
 
 * Role can now use system users and address groups
+
+### 2024-01-22: Added custom HTTP CHECK
+
+* You can now define your own HTTP check
 
 ## Authors
 
