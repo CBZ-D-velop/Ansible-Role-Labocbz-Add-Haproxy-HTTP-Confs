@@ -15,6 +15,13 @@ stages:
 #################### actions
 ###############################################################################
 
+# As a GitLab ci, we use the default template :)
+sast:
+  stage: gitlab-test
+include:
+- template: Security/SAST.gitlab-ci.yml
+  allow_failure: false
+
 yaml_lint:
   stage: lint
   image: $NEXUS_DOCKER_PROXY_ADDRESS/$DOCKER_IMAGE_YAML_LINT
