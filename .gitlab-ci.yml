@@ -37,8 +37,6 @@ yaml_lint:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "develop"
-  needs:
-    - "gitlab-test"
 
 jinja_lint:
   stage: lint
@@ -54,8 +52,6 @@ jinja_lint:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "develop"
-  needs:
-    - "gitlab-test"
 
 ansible_lint:
   stage: lint
@@ -71,8 +67,6 @@ ansible_lint:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "develop"
-  needs:
-    - "gitlab-test"
 
 .molecule_test: &molecule_test
   stage: test
