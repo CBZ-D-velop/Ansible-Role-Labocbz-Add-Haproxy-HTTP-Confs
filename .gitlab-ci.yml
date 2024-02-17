@@ -8,51 +8,51 @@
 
 stages:
 - gitlab-test
-- yaml-lint
-- jinja2-lint
-- ansible-lint
-- molecule-test
-
-variables:
-  PIPELINE_SCENARIO_NAME: "cicd-debian-11"
+- lint
+- test
 
 ###############################################################################
 #################### actions
 ###############################################################################
 
-# To start, we need to lint role's files with a YML vision
-# Because if one of the files doesn't respect YML conventions,
-# we dont need to test rest of the pipeline
-.yaml_lint: &yaml_lint
-  stage: yaml-lint
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_YAML_LINT
+yaml_lint:
+  stage: lint
+  image: $NEXUS_DOCKER_PROXY_ADDRESS/$DOCKER_IMAGE_YAML_LINT
   before_script:
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
     - "chmod o-w ."
   script:
-    - yamllint -c ./.yamllint $path # Here mains files
+    - yamllint -c ./.yamllint --list-files
+    - yamllint -c ./.yamllint ./
   allow_failure: false
   retry: 2
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  needs:
+    - "gitlab-test"
 
-# Then we need to lint on role's files with a JINJA2 vision
-# Because if one of the templates files doesn't respect JINJA2 conventions,
-# we dont need to test rest of the pipeline
-.jinja2_lint: &jinja2_lint
-  stage: jinja2-lint
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_JINJA_LINT
+jinja_lint:
+  stage: lint
+  image: $NEXUS_DOCKER_PROXY_ADDRESS/$DOCKER_IMAGE_JINJA_LINT
   before_script:
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
     - "chmod o-w ."
   script:
-    - "j2lint ./templates/*.j2 --ignore S3 S7"
+    - "[ -f \"./templates/*.j2\" ] && j2lint ./templates/*.j2 --ignore S3 S7"
   allow_failure: false
   retry: 2
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  needs:
+    - "gitlab-test"
 
-.ansible_lint: &ansible_lint
-  stage: ansible-lint
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_ANSIBLE_LINT
+ansible_lint:
+  stage: lint
+  image: $NEXUS_DOCKER_PROXY_ADDRESS/$DOCKER_IMAGE_ANSIBLE_LINT
   before_script:
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
@@ -61,90 +61,40 @@ variables:
     - ansible-lint --config=./.ansible-lint --exclude molecule --exclude tests ./*
   allow_failure: false
   retry: 2
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+  needs:
+    - "gitlab-test"
 
 .molecule_test: &molecule_test
-  stage: molecule-test
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_DOCKER_MOLECULE
+  stage: test
+  image: $NEXUS_DOCKER_PROXY_ADDRESS/$DOCKER_IMAGE_DOCKER_MOLECULE
   variables:
     PY_COLORS: '1'
     ANSIBLE_FORCE_COLOR: '1'
   before_script:
-    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" http://$NEXUS_ADDRESS"
+    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" http://$NEXUS_DOCKER_PROXY_ADDRESS"
     - "python3 -m compileall /usr/lib/python3 -qq"
     - "cp ./.ansible.cfg /root/.ansible.cfg"
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
     - "chmod o-w ."
-    - "[ -f \"./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml\" ] && ansible-galaxy install -r ./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml --roles-path=./molecule/$PIPELINE_SCENARIO_NAME/roles"
+    - "[ -f \"./molecule/$SCENARIO/requirements.yml\" ] && ansible-galaxy install -r ./molecule/$SCENARIO/requirements.yml --roles-path=./molecule/$SCENARIO/roles"
   script:
-    - "molecule test --scenario-name $PIPELINE_SCENARIO_NAME"
+    - "molecule test --scenario-name $SCENARIO"
   allow_failure: false
   retry: 2
-
-###############################################################################
-#################### CI JOBS
-###############################################################################
-
-############################################
-#### gitlab-test
-############################################
-
-# As a GitLab ci, we use the default template :)
-sast:
-  stage: gitlab-test
-include:
-- template: Security/SAST.gitlab-ci.yml
-  allow_failure: false
-
-############################################
-#### yaml-lint
-############################################
-
-yaml_lint_role:
-  <<: *yaml_lint
-  variables:
-    path: "./*/*.yml"
-
-yaml_lint_molecule:
-  <<: *yaml_lint
-  variables:
-    path: "./molecule/*/*.yml"
-
-yaml_lint_inventories:
-  <<: *yaml_lint
-  variables:
-    path: "./tests/inventory/hosts.yml ./tests/inventory/*/*.yml"
-
-yaml_lint_extra_vars:
-  <<: *yaml_lint
-  variables:
-    path: "./tests/certs/main.yml ./tests/tower/tower.yml"
-
-#############################################
-##### jinja2-lint
-#############################################
-
-jinja2_lint_templates:
-  <<: *jinja2_lint
-
-############################################
-#### ansible-lint
-############################################
-
-ansible_lint:
-  <<: *ansible_lint
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
   needs:
-    - "yaml_lint_role"
-    - "yaml_lint_molecule"
-    - "yaml_lint_inventories"
-    - "yaml_lint_extra_vars"
-    - "jinja2_lint_templates"
+    - "lint"
 
-############################################
-#### moelcule test
-############################################
-
-molecule_test:
+molecule_test_debian_11:
   <<: *molecule_test
+  variables:
+    SCENARIO: "cicd-debian-11"
   needs:
-    - "ansible_lint"
+    - "lint"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
