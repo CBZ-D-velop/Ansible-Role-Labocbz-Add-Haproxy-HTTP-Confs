@@ -88,14 +88,10 @@ ansible_lint:
   retry: 2
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-  needs:
-    - "lint"
 
 molecule_test_debian_11:
   <<: *molecule_test
   variables:
     SCENARIO: "cicd-debian-11"
-  needs:
-    - "lint"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
