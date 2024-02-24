@@ -2,7 +2,7 @@
 # Don't forget to keep this file updated
 # molecule/<scenario>/verify.yml
 - name: "Verify"
-  hosts: "cicd-debian-11"
+  hosts: "cicd-debian-12"
   gather_facts: false
   tasks:
 

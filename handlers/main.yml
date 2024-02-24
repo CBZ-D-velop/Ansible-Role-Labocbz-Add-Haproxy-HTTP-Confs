@@ -1,7 +1,7 @@
 ---
 - name: "Restart HAProxy"
-  register: add_haproxy_http_confs_service_status
-  changed_when: add_haproxy_http_confs_service_status.state != "restarted"
+  register: add_haproxy_http_confs__service_status
+  changed_when: add_haproxy_http_confs__service_status.state != "restarted"
   ansible.builtin.service:
     name: "haproxy"
     state: "restarted"

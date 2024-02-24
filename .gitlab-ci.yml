@@ -8,86 +8,61 @@
 
 stages:
 - gitlab-test
-- yaml-lint
-- jinja2-lint
-- ansible-lint
-- molecule-test
-
-variables:
-  PIPELINE_SCENARIO_NAME: "cicd-debian-11"
+- lint
+- sonarqube
+- test
+- publish
 
 ###############################################################################
 #################### actions
 ###############################################################################
 
-# To start, we need to lint role's files with a YML vision
-# Because if one of the files doesn't respect YML conventions,
-# we dont need to test rest of the pipeline
-.yaml_lint: &yaml_lint
-  stage: yaml-lint
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_YAML_LINT
-  before_script:
-    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
-    # This probably happens due to gitlab-runner mounting the git repo into the container
-    - "chmod o-w ."
-  script:
-    - yamllint -c ./.yamllint $path # Here mains files
-  allow_failure: false
-  retry: 2
+variables:
+  ANSIBLE_FORCE_COLOR: "true"
+  PY_COLORS: "1"
+  #
+  DOCKER_IMAGE_SONAR_SCANNER_CLI: "robincbz/alpine-sonarcli:latest"
+  DOCKER_IMAGE_DOCKER_DIND_MOLECULE: robincbz/docker-dind-molecule:latest
+  DOCKER_IMAGE_DOCKER_DIND_ANSIBLE: robincbz/docker-dind-ansible:latest
+  DOCKER_IMAGE_ALPINE_GIT: robincbz/alpine-git:latest
+  DOCKER_IMAGE_ANSIBLE_LINT: robincbz/alpine-ansiblelint:latest
+  DOCKER_IMAGE_JINJA_LINT: robincbz/alpine-jinjalint:latest
+  DOCKER_IMAGE_YAML_LINT: robincbz/alpine-yamllint:latest
+  DOCKER_IMAGE_DEBIAN_11_ANSIBLE: robincbz/debian-11-ansible:latest
+  DOCKER_IMAGE_DEBIAN_12_ANSIBLE: robincbz/debian-12-ansible:latest
+  DOCKER_IMAGE_UBUNTU_22_ANSIBLE: robincbz/ubuntu-22-ansible:latest
+  DOCKER_IMAGE_ALPINE_RELEASE_CLI: "robincbz/alpine-releasecli:latest"
 
-# Then we need to lint on role's files with a JINJA2 vision
-# Because if one of the templates files doesn't respect JINJA2 conventions,
-# we dont need to test rest of the pipeline
-.jinja2_lint: &jinja2_lint
-  stage: jinja2-lint
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_JINJA_LINT
-  before_script:
-    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
-    # This probably happens due to gitlab-runner mounting the git repo into the container
-    - "chmod o-w ."
-  script:
-    - "j2lint ./templates/*.j2 --ignore S3 S7"
-  allow_failure: false
-  retry: 2
-
-.ansible_lint: &ansible_lint
-  stage: ansible-lint
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_ANSIBLE_LINT
-  before_script:
-    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
-    # This probably happens due to gitlab-runner mounting the git repo into the container
-    - "chmod o-w ."
-  script:
-    - ansible-lint --config=./.ansible-lint --exclude molecule --exclude tests ./*
-  allow_failure: false
-  retry: 2
+###############################################################################
+#################### EXTENDABLES
+###############################################################################
 
 .molecule_test: &molecule_test
-  stage: molecule-test
-  image: $NEXUS_ADDRESS/$DOCKER_IMAGE_DOCKER_MOLECULE
-  variables:
-    PY_COLORS: '1'
-    ANSIBLE_FORCE_COLOR: '1'
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_DOCKER_DIND_MOLECULE
+  stage: test
   before_script:
-    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" http://$NEXUS_ADDRESS"
+    - "export DOCKER_CLIENT_TIMEOUT=180"
+    - "export COMPOSE_HTTP_TIMEOUT=180"
+    - "docker login -u \"$NEXUS_REPOS_USERNAME\" -p \"$NEXUS_REPOS_PASSWORD\" \"http://$NEXUS_REPOS_DOCKER_REGISTRY\""
     - "python3 -m compileall /usr/lib/python3 -qq"
     - "cp ./.ansible.cfg /root/.ansible.cfg"
     # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
     # This probably happens due to gitlab-runner mounting the git repo into the container
     - "chmod o-w ."
-    - "[ -f \"./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml\" ] && ansible-galaxy install -r ./molecule/$PIPELINE_SCENARIO_NAME/requirements.yml --roles-path=./molecule/$PIPELINE_SCENARIO_NAME/roles"
+    - "[ -f \"./molecule/$SCENARIO/requirements.yml\" ] && ansible-galaxy install -r ./molecule/$SCENARIO/requirements.yml --roles-path=./molecule/$SCENARIO/roles"
   script:
-    - "molecule test --scenario-name $PIPELINE_SCENARIO_NAME"
+    - "molecule test --scenario-name $SCENARIO"
   allow_failure: false
-  retry: 2
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
+  needs:
+    - "yaml_lint"
+    - "jinja_lint"
+    - "ansible_lint"
 
 ###############################################################################
-#################### CI JOBS
+#################### CICD
 ###############################################################################
-
-############################################
-#### gitlab-test
-############################################
 
 # As a GitLab ci, we use the default template :)
 sast:
@@ -96,55 +71,154 @@ include:
 - template: Security/SAST.gitlab-ci.yml
   allow_failure: false
 
-############################################
-#### yaml-lint
-############################################
+yaml_lint:
+  stage: lint
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_YAML_LINT
+  before_script:
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - "chmod o-w ."
+  script:
+    - yamllint --list-files ./
+    - yamllint -c ./.yamllint ./
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
 
-yaml_lint_role:
-  <<: *yaml_lint
-  variables:
-    path: "./*/*.yml"
-
-yaml_lint_molecule:
-  <<: *yaml_lint
-  variables:
-    path: "./molecule/*/*.yml"
-
-yaml_lint_inventories:
-  <<: *yaml_lint
-  variables:
-    path: "./tests/inventory/hosts.yml ./tests/inventory/*/*.yml"
-
-yaml_lint_extra_vars:
-  <<: *yaml_lint
-  variables:
-    path: "./tests/certs/main.yml ./tests/tower/tower.yml"
-
-#############################################
-##### jinja2-lint
-#############################################
-
-jinja2_lint_templates:
-  <<: *jinja2_lint
-
-############################################
-#### ansible-lint
-############################################
+jinja_lint:
+  stage: lint
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_JINJA_LINT
+  before_script:
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - "chmod o-w ."
+  script:
+    - "[ -n \"$(find ./templates -name '*.j2')\" ] && j2lint ./templates/*.j2 --ignore S3 S7"
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
 
 ansible_lint:
-  <<: *ansible_lint
-  needs:
-    - "yaml_lint_role"
-    - "yaml_lint_molecule"
-    - "yaml_lint_inventories"
-    - "yaml_lint_extra_vars"
-    - "jinja2_lint_templates"
+  stage: lint
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_ANSIBLE_LINT
+  before_script:
+    # Fix weird ansible bug: https://github.com/trailofbits/algo/issues/1637
+    # This probably happens due to gitlab-runner mounting the git repo into the container
+    - "chmod o-w ."
+  script:
+    - ansible-lint --config=./.ansible-lint --exclude molecule --exclude tests ./*
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
 
-############################################
-#### moelcule test
-############################################
-
-molecule_test:
+molecule_test_debian_12:
   <<: *molecule_test
+  variables:
+    SCENARIO: "cicd-debian-12"
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
+
+molecule_test_ubuntu_22:
+  <<: *molecule_test
+  variables:
+    SCENARIO: "cicd-ubuntu-22"
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
+
+molecule_test_debian_11:
+  <<: *molecule_test
+  variables:
+    SCENARIO: "cicd-debian-11"
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
+
+publish_release_candidate:
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_ALPINE_GIT
+  stage: publish
+  variables:
+    CI_JOB_TOKEN: $CICD_TOKEN
+  allow_failure: false
+  before_script:
+    - "REMOTE_ADDRESS=$(echo \"$CI_REPOSITORY_URL\" | awk -F@ '{print $2}' | sed 's|/|:|')"
+    - "TIMESTAMP=$(date +'%Y.%m.%d-%H.%M.%S')"
+    - "TAGS=$(git ls-remote --tags origin | awk '{print $2}' | grep -oE 'refs/tags/[0-9.]+' | cut -d '/' -f 3 | sort -V)"
+    - "LATEST_TAG=$(echo \"$TAGS\" | tail -n 1)"
+    - "VERSION=$(echo \"$LATEST_TAG\" | grep -oE '^[0-9]+') && VERSION=$((VERSION + 1))"
+    - "RC_BRANCH_NAME=\"RC-$VERSION-$TIMESTAMP\""
+    #
+    - "mkdir -p ~/.ssh"
+    - "echo \"$(cat $GITLAB_CI_SSH_PRIVATE_KEY)\" | tr -d '\r' > ~/.ssh/id_rsa"
+    - "echo \"$(cat $GITLAB_CI_SSH_PUBLIC_KEY)\" | tr -d '\r' > ~/.ssh/id_rsa.pub"
+    - "chmod 400 ~/.ssh/id_rsa*"
+    - "eval \"$(ssh-agent -s)\""
+    - "ssh-keyscan -H 'gitlab.com' >> ~/.ssh/known_hosts"
+  script:
+    - "git config user.email \"$GITLAB_USER_EMAIL\""
+    - "git config user.name \"$GITLAB_USER_EMAIL\""
+    - "git remote remove r_origin || true"
+    - "git remote add r_origin git@$REMOTE_ADDRESS"
+    - "git checkout \"develop\""
+    - "git stash"
+    - "git pull origin \"develop\""
+    - "git checkout -b \"$RC_BRANCH_NAME\""
+    - "git add ."
+    - "git push r_origin \"$RC_BRANCH_NAME\""
   needs:
-    - "ansible_lint"
+    - "molecule_test_debian_12"
+    - "sonarqube-check"
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
+
+sonarqube-check:
+  stage: sonarqube
+  image: 
+    name: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_SONAR_SCANNER_CLI
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - ".sonar/cache"
+  script: 
+    - "sonar-scanner"
+  rules:
+    - if: '$CI_COMMIT_MESSAGE=~/^[^Merge]/ && $CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+set_version_artefact:
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_ALPINE_GIT
+  stage: publish
+  before_script:
+    - "TAGS=$(git ls-remote --tags origin | awk '{print $2}' | grep -oE 'refs/tags/[0-9.]+' | cut -d '/' -f 3 | sort -V)"
+    - "LATEST_TAG=$(echo \"$TAGS\" | tail -n 1)"
+    - "VERSION=$(echo \"$LATEST_TAG\" | grep -oE '^[0-9]+') && VERSION=$((VERSION + 1))"
+  script:
+    - "echo \"RELEASE $VERSION from latest RC-$VERSION\""
+    - "echo \"VERSION=$VERSION\" >> VERSION.env"
+  artifacts:
+    reports:
+      dotenv: VERSION.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  needs:
+    - "sonarqube-check"
+
+publish_release:
+  image: $NEXUS_REPOS_DOCKER_REGISTRY/$DOCKER_IMAGE_ALPINE_RELEASE_CLI
+  stage: publish
+  script:
+    - "echo \"RELEASE $VERSION from latest RC-$VERSION\""
+  release:
+    name: "$VERSION"
+    description: "RELEASE $VERSION from latest RC-$VERSION"
+    tag_name: "$VERSION"
+    ref: "$CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  needs:
+    - job: "set_version_artefact"
+      artifacts: true

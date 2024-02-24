@@ -48,9 +48,6 @@ skip_list:
   - skip_this_tag
   - latest[git]
   #- yaml[line-length]
-  - yaml
-  - role-name[path]
-  - name[template]
 
 # Ansible-lint does not automatically load rules that have the 'opt-in' tag.
 # You must enable opt-in rules by listing each rule 'id' below.

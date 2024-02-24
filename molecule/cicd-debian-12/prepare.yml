@@ -1,7 +1,7 @@
 ---
 # if you have any prepararion task
 - name: "Prepare"
-  hosts: "local"
+  hosts: "cicd-debian-12"
   gather_facts: true
   tasks:
 
@@ -19,11 +19,11 @@
     - name: "Gather facts from all hosts"
       delegate_to: "{{ item }}"
       delegate_facts: true
-      loop: "{{ groups['local'] }}"
+      loop: "{{ groups['cicd-debian-12'] }}"
       ansible.builtin.setup:
 
     - name: "Edit /etc/hosts file to add all hosts"
-      loop: "{{ groups['local'] }}"
+      loop: "{{ groups['cicd-debian-12'] }}"
       loop_control:
         loop_var: host
       register: output

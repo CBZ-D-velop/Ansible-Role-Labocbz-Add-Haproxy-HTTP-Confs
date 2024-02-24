@@ -1,7 +1,7 @@
 ---
 # if you have any prepararion task
 - name: "Prepare"
-  hosts: "all"
+  hosts: "cicd-debian-11"
   gather_facts: true
   tasks:
 
@@ -12,17 +12,22 @@
       tags:
         - "labocbz.prepare_host"
       vars:
-        prepare_host_system_users: "{{ inv_prepare_host_system_users }}"
+        prepare_host__system_users: "{{ inv_prepare_host__system_users }}"
       ansible.builtin.include_role:
         name: "labocbz.prepare_host"
 
+    - name: "Gather facts from all hosts"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['cicd-debian-11'] }}"
+      ansible.builtin.setup:
+
     - name: "Edit /etc/hosts file to add all hosts"
-      loop: "{{ groups['all'] }}"
+      loop: "{{ groups['cicd-debian-11'] }}"
       loop_control:
         loop_var: host
       register: output
       changed_when: output.rc != 0
-      when: host != ansible_host
       ansible.builtin.shell: "echo \"{{ hostvars[host]['ansible_default_ipv4']['address'] }}  {{ host }} # from Molecule\" >> /etc/hosts"
 
     - name: "Import cryptographic content if needed (cert)"
@@ -57,15 +62,15 @@
         loop_var: bundle
       when: inv_cert_bundles is defined
       vars:
-        add_certificates_bundle_name: "{{ bundle.name }}"
-        add_certificates_bundle_type: "{{ bundle.type }}"
-        add_certificates_bundle_src: "{{ bundle.src }}"
-        add_certificates_bundle_dest: "{{ bundle.dest }}"
-        #add_certificates_bundle_src_user: "{{ bundle.src_user }}"
-        #add_certificates_bundle_src_password: "{{ bundle.src_password }}"
-        add_certificates_bundle_dest_user: "{{ bundle.dest_user }}"
-        add_certificates_bundle_dest_group: "{{ bundle.dest_group }}"
-        add_certificates_bundle_dest_mode: "{{ bundle.dest_mode }}"
+        add_certificates__bundle_name: "{{ bundle.name }}"
+        add_certificates__bundle_type: "{{ bundle.type }}"
+        add_certificates__bundle_src: "{{ bundle.src }}"
+        add_certificates__bundle_dest: "{{ bundle.dest }}"
+        #add_certificates__bundle_src_user: "{{ bundle.src_user }}"
+        #add_certificates__bundle_src_password: "{{ bundle.src_password }}"
+        add_certificates__bundle_dest_user: "{{ bundle.dest_user }}"
+        add_certificates__bundle_dest_group: "{{ bundle.dest_group }}"
+        add_certificates__bundle_dest_mode: "{{ bundle.dest_mode }}"
       ansible.builtin.include_role:
         name: "labocbz.add_certificates"
 
@@ -73,18 +78,18 @@
       tags:
         - "labocbz.install_haproxy"
       vars:
-        install_haproxy_path: "{{ inv_install_haproxy_path }}"
-        install_haproxy_confs_path: "{{ inv_install_haproxy_confs_path }}"
-        install_haproxy_error_path: "{{ inv_install_haproxy_error_path }}"
-        install_haproxy_ssl_path: "{{ inv_install_haproxy_ssl_path }}"
-        install_haproxy_error_files: "{{ inv_install_haproxy_error_files }}"
-        install_haproxy_listen_stats: "{{ inv_install_haproxy_listen_stats }}"
-        install_haproxy_listen_stats_port: "{{ inv_install_haproxy_listen_stats_port }}"
-        install_haproxy_listen_stats_uri: "{{ inv_install_haproxy_listen_stats_uri }}"
-        install_haproxy_stats_login: "{{ inv_install_haproxy_stats_login }}"
-        install_haproxy_stats_password: "{{ inv_install_haproxy_stats_password }}"
-        install_haproxy_listen_stats_https: "{{ inv_install_haproxy_listen_stats_https }}"
-        install_haproxy_listen_stats_cert: "{{ inv_install_haproxy_listen_stats_cert }}"
-        install_haproxy_listen_stats_key: "{{ inv_install_haproxy_listen_stats_key }}"
+        install_haproxy__path: "{{ inv_install_haproxy__path }}"
+        install_haproxy__confs_path: "{{ inv_install_haproxy__confs_path }}"
+        install_haproxy__error_path: "{{ inv_install_haproxy__error_path }}"
+        install_haproxy__ssl_path: "{{ inv_install_haproxy__ssl_path }}"
+        install_haproxy__error_files: "{{ inv_install_haproxy__error_files }}"
+        install_haproxy__listen_stats: "{{ inv_install_haproxy__listen_stats }}"
+        install_haproxy__listen_stats_port: "{{ inv_install_haproxy__listen_stats_port }}"
+        install_haproxy__listen_stats_uri: "{{ inv_install_haproxy__listen_stats_uri }}"
+        install_haproxy__stats_login: "{{ inv_install_haproxy__stats_login }}"
+        install_haproxy__stats_password: "{{ inv_install_haproxy__stats_password }}"
+        install_haproxy__listen_stats_https: "{{ inv_install_haproxy__listen_stats_https }}"
+        install_haproxy__listen_stats_cert: "{{ inv_install_haproxy__listen_stats_cert }}"
+        install_haproxy__listen_stats_key: "{{ inv_install_haproxy__listen_stats_key }}"
       ansible.builtin.include_role:
         name: "labocbz.install_haproxy"
