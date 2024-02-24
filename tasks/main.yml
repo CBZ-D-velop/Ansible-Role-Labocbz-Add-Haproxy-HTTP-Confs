@@ -2,40 +2,40 @@
 - name: "Verify HAProxy installation"
   block:
     - name: "Get HAProxy service current state"
-      register: add_haproxy_http_confs_service_status
-      failed_when: not (add_haproxy_http_confs_service_status.status.ActiveState == 'active' or add_haproxy_http_confs_service_status.status.ActiveState == 'failed' or add_haproxy_http_confs_service_status.status.ActiveState == 'inactive')
+      register: add_haproxy_http_confs__service_status
+      failed_when: not (add_haproxy_http_confs__service_status.status.ActiveState == 'active' or add_haproxy_http_confs__service_status.status.ActiveState == 'failed' or add_haproxy_http_confs__service_status.status.ActiveState == 'inactive')
       ansible.builtin.systemd:
         name: "haproxy"
 
-    - name: "Check if {{ add_haproxy_http_confs_confs_path }} directory exist"
+    - name: "Check if conf path directory exist"
       register: host_working_folder
       failed_when: not host_working_folder.stat.exists
       ansible.builtin.stat:
-        path: "{{ add_haproxy_http_confs_confs_path }}"
+        path: "{{ add_haproxy_http_confs__confs_path }}"
 
-- name: "Create HAProxy sub conf file: {{ item.name }}.cfg"
-  loop: "{{ add_haproxy_http_confs_configurations }}"
+- name: "Create HAProxy sub conf file: {{ item.name }}"
+  loop: "{{ add_haproxy_http_confs__configurations }}"
   loop_control:
     loop_var: configuration
   notify: "Restart HAProxy"
   vars:
-    configuration_fullchain: "{{ add_haproxy_http_confs_ssl_path }}/{{ configuration.name }}-fullchain.pem"
+    configuration_fullchain: "{{ add_haproxy_http_confs__ssl_path }}/{{ configuration.name }}-fullchain.pem"
   ansible.builtin.template:
     src: "templates/conf.cfg.j2"
-    dest: "{{ add_haproxy_http_confs_confs_path }}/{{ configuration.name }}.cfg"
+    dest: "{{ add_haproxy_http_confs__confs_path }}/{{ configuration.name }}.cfg"
     lstrip_blocks: yes
-    owner: "{{ add_haproxy_http_confs_haproxy_user }}"
-    group: "{{ add_haproxy_http_confs_haproxy_group }}"
+    owner: "{{ add_haproxy_http_confs__haproxy_user }}"
+    group: "{{ add_haproxy_http_confs__haproxy_group }}"
     mode: "0700"
 
 - name: "Create fullchain file"
   register: output
   changed_when: output.rc != 0
-  loop: "{{ add_haproxy_http_confs_configurations }}"
+  loop: "{{ add_haproxy_http_confs__configurations }}"
   loop_control:
     loop_var: configuration
   when: configuration.frontend.https | default(false)
-  notify: "Restart HAProxy"
   vars:
-    configuration_fullchain: "{{ add_haproxy_http_confs_ssl_path }}/{{ configuration.name }}-fullchain.pem"
-  ansible.builtin.shell: cat {{ configuration.frontend.crt }} {{ configuration.frontend.key }} > {{ configuration_fullchain }}
+    configuration_fullchain: "{{ add_haproxy_http_confs__ssl_path }}/{{ configuration.name }}-fullchain.pem"
+  ansible.builtin.shell: |
+    cat {{ configuration.frontend.crt }} {{ configuration.frontend.key }} > {{ configuration_fullchain }}

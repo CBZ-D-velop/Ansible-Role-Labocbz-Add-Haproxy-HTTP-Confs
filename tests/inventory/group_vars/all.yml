@@ -1,11 +1,12 @@
 ---
-add_haproxy_http_confs__confs_path: "/etc/haproxy/conf.d"
-add_haproxy_http_confs__ssl_path: "/etc/haproxy/ssl"
+inv_prepare_host__system_users:
+  - login: "haproxy"
+    group: "haproxy"
 
-add_haproxy_http_confs__haproxy_group: "haproxy"
-add_haproxy_http_confs__haproxy_user: "haproxy"
+inv_add_haproxy_http_confs__confs_path: "/etc/haproxy/conf.d"
+inv_add_haproxy_http_confs__ssl_path: "/etc/haproxy/ssl"
 
-add_haproxy_http_confs__configurations:
+inv_add_haproxy_http_confs__configurations:
   - name: "my.website.domain.tld"
     frontend:
       description: "My first website  with HTTP frontend address"

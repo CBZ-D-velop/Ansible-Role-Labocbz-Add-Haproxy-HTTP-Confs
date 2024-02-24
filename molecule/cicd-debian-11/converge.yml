@@ -1,20 +1,14 @@
 ---
 - name: "Converge"
-  hosts: "all"
+  hosts: "cicd-debian-11"
   tasks:
-    # replace these tasks with whatever you find suitable to test
-    - name: "Copy something to test use of synchronize module"
-      ansible.builtin.copy:
-        src: "/etc/hosts"
-        dest: "/tmp/hosts-from-controller"
-        mode: 0700
 
-    - name: "Include labocbz.add_add_haproxy_http_confs_http_confs"
+    - name: "Include labocbz.add_add_haproxy_http_confs__http_confs"
       tags:
-        - "labocbz.add_add_haproxy_http_confs_http_confs"
+        - "labocbz.add_add_haproxy_http_confs__http_confs"
       vars:
-        add_haproxy_http_confs_confs_path: "{{ inv_add_haproxy_http_confs_confs_path }}"
-        add_haproxy_http_confs_configurations: "{{ inv_add_haproxy_http_confs_configurations }}"
-        add_haproxy_http_confs_ssl_path: "{{ inv_add_haproxy_http_confs_ssl_path }}"
+        add_haproxy_http_confs__confs_path: "{{ inv_add_haproxy_http_confs__confs_path }}"
+        add_haproxy_http_confs__configurations: "{{ inv_add_haproxy_http_confs__configurations }}"
+        add_haproxy_http_confs__ssl_path: "{{ inv_add_haproxy_http_confs__ssl_path }}"
       ansible.builtin.include_role:
-        name: "labocbz.add_add_haproxy_http_confs_http_confs"
+        name: "labocbz.add_add_haproxy_http_confs__http_confs"

@@ -1,4 +1,4 @@
-# Ansible role: labocbz.add_add_haproxy_http_confs_http_confs
+# Ansible role: labocbz.add_add_haproxy_http_confs__http_confs
 
 ![Licence Status](https://img.shields.io/badge/licence-MIT-brightgreen)
 ![CI Status](https://img.shields.io/badge/CI-success-brightgreen)
@@ -111,13 +111,13 @@ Some vars a required to run this role:
 
 ```YAML
 ---
-add_haproxy_http_confs_confs_path: "/etc/haproxy/conf.d"
-add_haproxy_http_confs_ssl_path: "/etc/haproxy/ssl"
+add_haproxy_http_confs__confs_path: "/etc/haproxy/conf.d"
+add_haproxy_http_confs__ssl_path: "/etc/haproxy/ssl"
 
-add_haproxy_http_confs_haproxy_group: "haproxy"
-add_haproxy_http_confs_haproxy_user: "haproxy"
+add_haproxy_http_confs__haproxy_group: "haproxy"
+add_haproxy_http_confs__haproxy_user: "haproxy"
 
-add_haproxy_http_confs_configurations:
+add_haproxy_http_confs__configurations:
   - name: "my.website.domain.tld"
     frontend:
       description: "My first website  with HTTP frontend address"
@@ -147,8 +147,8 @@ add_haproxy_http_confs_configurations:
       bind: "*"
       port: 10031
       https: true
-      crt: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
-      key: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
+      crt: "{{ inv_add_haproxy_http_confs__ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_add_haproxy_http_confs__ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -180,10 +180,10 @@ In order to surchage vars, you have multiples possibilities but for mains cases 
 ```YAML
 # From inventory
 ---
-inv_add_haproxy_http_confs_confs_path: "/etc/haproxy/conf.d"
-inv_add_haproxy_http_confs_ssl_path: "/etc/haproxy/ssl"
+inv_add_haproxy_http_confs__confs_path: "/etc/haproxy/conf.d"
+inv_add_haproxy_http_confs__ssl_path: "/etc/haproxy/ssl"
 
-inv_add_haproxy_http_confs_configurations:
+inv_add_haproxy_http_confs__configurations:
   - name: "my.website.domain.tld"
     frontend:
       description: "My first website  with HTTP frontend address"
@@ -213,8 +213,8 @@ inv_add_haproxy_http_confs_configurations:
       bind: "*"
       port: 10031
       https: true
-      crt: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
-      key: "{{ inv_add_haproxy_http_confs_ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
+      crt: "{{ inv_add_haproxy_http_confs__ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.crt"
+      key: "{{ inv_add_haproxy_http_confs__ssl_path }}/my.https.website.domain.tld/my.https.website.domain.tld.pem.key"
       mode: "http"
     backend:
       balance: leastconn
@@ -248,15 +248,15 @@ inv_add_haproxy_http_confs_configurations:
 To run this role, you can copy the molecule/default/converge.yml playbook and add it into your playbook:
 
 ```YAML
-- name: "Include labocbz.add_add_haproxy_http_confs_http_confs"
+- name: "Include labocbz.add_add_haproxy_http_confs__http_confs"
   tags:
-    - "labocbz.add_add_haproxy_http_confs_http_confs"
+    - "labocbz.add_add_haproxy_http_confs__http_confs"
   vars:
-    add_haproxy_http_confs_confs_path: "{{ inv_add_haproxy_http_confs_confs_path }}"
-    add_haproxy_http_confs_configurations: "{{ inv_add_haproxy_http_confs_configurations }}"
-    add_haproxy_http_confs_ssl_path: "{{ inv_add_haproxy_http_confs_ssl_path }}"
+    add_haproxy_http_confs__confs_path: "{{ inv_add_haproxy_http_confs__confs_path }}"
+    add_haproxy_http_confs__configurations: "{{ inv_add_haproxy_http_confs__configurations }}"
+    add_haproxy_http_confs__ssl_path: "{{ inv_add_haproxy_http_confs__ssl_path }}"
   ansible.builtin.include_role:
-    name: "labocbz.add_add_haproxy_http_confs_http_confs"
+    name: "labocbz.add_add_haproxy_http_confs__http_confs"
 ```
 
 ## Architectural Decisions Records
@@ -300,6 +300,11 @@ Here you can put your change to keep a trace of your work and decisions.
 ### 2024-01-22: Added custom HTTP CHECK
 
 * You can now define your own HTTP check
+
+### 2024-02-24: Fix and CI
+
+* Added support for new CI base
+* Edit all vars with __
 
 ## Authors
 

@@ -1,7 +1,7 @@
 galaxy_info:
   author: "Lord Robin Crombez"
   namespace: "labocbz"
-  role_name: "add_add_haproxy_http_confs_http_confs"
+  role_name: "add_add_haproxy_http_confs__http_confs"
   description: "An Ansible role create and add HAProxy HTTP confs to your server."
   company: "Labo-CBZ"
 
@@ -43,8 +43,10 @@ galaxy_info:
   platforms:
     - name: "Debian"
       versions:
-        - "buster"
-        - "bullseye"
+        - "all"
+    - name: "Ubuntu"
+      versions:
+        - "all"
 
   galaxy_tags: []
     # List tags for your role here, one per line. A tag is a keyword that describes

@@ -1,6 +1,6 @@
 ---
 - name: "Converge"
-  hosts: "local"
+  hosts: "cicd-debian-12"
   tasks:
 
     - name: "Include labocbz.add_add_haproxy_http_confs__http_confs"
