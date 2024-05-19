@@ -9,7 +9,7 @@ driver:
 
 platforms:
   - name: "molecule-cicd-debian-12-instance-1-add-haproxy-http-confs"
-    image: "${NEXUS_REPOS_DOCKER_REGISTRY}/${DOCKER_IMAGE_DEBIAN_12_ANSIBLE}"
+    image: "${NEXUS_DOCKER_GROUP_REGISTRY}/${DOCKER_IMAGE__ANSIBLETEST_DEBIAN_12}"
     hostname: "molecule-cicd-debian-12-instance-1-add-haproxy-http-confs"
     privileged: true
     pre_build_image: true
@@ -34,7 +34,7 @@ provisioner:
       host_vars: "../../tests/inventory/host_vars/"
   options:
     extra-vars: "@./../../tests/tower/tower.yml"
-  log: ${MOLECULE_ANSIBLE_LOG:-true}
+  log: true
   env:
     ANSIBLE_CONFIG: "../../.ansible.cfg"
     ANSIBLE_FORCE_COLOR: "true"
